@@ -40,6 +40,12 @@ To install without root:
 
 For Arch Linux, `packaging/PKGBUILD` builds a package.
 
+## Release
+
+To release, change `pkgver` in `packaging/PKGBUILD` and push to `main`. The `Tag` workflow creates the tag
+`v<pkgver>` and starts the `Release` workflow, which builds the Arch package and attaches it to a GitHub
+Release.
+
 ## Start Steam
 
 Start Steam the way you already do:
