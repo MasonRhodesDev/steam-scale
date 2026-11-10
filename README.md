@@ -22,8 +22,6 @@ or, without root:
 
     make install PREFIX=$HOME/.local
 
-`LIBDIR` must be given to both `make` and `make install` if it is not `$PREFIX/lib`.
-
 ## Run
 
 Start Steam with `steam-scale` in place of `steam`; arguments are passed on.
