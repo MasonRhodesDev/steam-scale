@@ -1,11 +1,11 @@
 # Maintainer: Mason Rhodes <mrhodesdev@gmail.com>
 #
-# Version source of truth: pkgver below. CI drops a git-archive snapshot named
-# $pkgname-$pkgver.tar.gz next to this file and runs updpkgsums, so the
-# committed checksum only authenticates the tagged release archive.
+# The release tag is the version: a release build sets pkgver from the tag,
+# so pkgver below is a placeholder. CI drops a git-archive snapshot named
+# $pkgname-$pkgver.tar.gz next to this file and runs updpkgsums.
 
 pkgname=steam-scale
-pkgver=0.1.2
+pkgver=0.0.0
 pkgrel=1
 pkgdesc="Per-monitor fractional scaling for the Steam client under XWayland"
 arch=(x86_64)

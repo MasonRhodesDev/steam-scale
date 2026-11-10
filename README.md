@@ -42,9 +42,13 @@ For Arch Linux, `packaging/PKGBUILD` builds a package.
 
 ## Release
 
-To release, change `pkgver` in `packaging/PKGBUILD` and push to `main`. The `Tag` workflow creates the tag
-`v<pkgver>` and starts the `Release` workflow, which builds the Arch package and attaches it to a GitHub
-Release.
+Commit subjects on `main` decide the version, following [Conventional Commits](https://www.conventionalcommits.org).
+A push with a `feat`, `fix`, `perf` or `revert` commit since the last tag releases a patch version. A breaking
+commit (`type!:` or a `BREAKING CHANGE:` footer) releases a minor version. From 1.0.0 on, breaking is major,
+`feat` is minor and the rest are patch. Other types, such as `docs` and `ci`, release nothing.
+
+The `Tag` workflow creates the tag and starts the `Release` workflow, which builds the Arch package with the
+tag as its version and attaches it to a GitHub Release. No file holds the version.
 
 ## Start Steam
 

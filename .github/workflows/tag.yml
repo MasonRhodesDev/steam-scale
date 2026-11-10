@@ -1,12 +1,11 @@
 name: Tag
 
-# A push to main that changes pkgver releases it: this creates v<pkgver> and starts Release on the tag.
-# Release is started by workflow_dispatch because a tag that GITHUB_TOKEN creates does not start workflows.
+# A push to main with a feat, fix, perf, revert or breaking commit since the last tag releases it.
+# The shared workflow picks the next version from those commits, tags it, and starts Release on the tag.
 
 on:
   push:
     branches: [main]
-    paths: [packaging/PKGBUILD]
 
 permissions:
   contents: write
@@ -14,17 +13,4 @@ permissions:
 
 jobs:
   tag:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-      - name: Tag a new pkgver and start Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tag="v$(sed -n 's/^pkgver=//p' packaging/PKGBUILD)"
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
-            echo "$tag exists"
-            exit 0
-          fi
-          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$GITHUB_SHA" >/dev/null
-          gh workflow run release.yml --ref "$tag"
+    uses: MasonRhodesDev/packaging-workflows/.github/workflows/tag-release.yml@v1
