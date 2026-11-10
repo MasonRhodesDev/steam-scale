@@ -24,15 +24,20 @@ or, without root:
 
 ## Run
 
-Start Steam with `steam-scale` in place of `steam`; arguments are passed on.
+The install also puts a `steam` link to `steam-scale` in the same directory. When that directory comes before
+the real `steam` on `PATH`, as `/usr/local/bin` and `~/.local/bin` usually do, starting Steam by name already
+goes through steam-scale. Something that starts Steam by its full path, such as a desktop entry with
+`Exec=/usr/bin/steam`, does not; point it at `steam-scale`.
 
-    steam-scale
+    steam                        # or steam-scale; arguments are passed on
+
+`make install SHADOWDIR=` installs no link, and `SHADOWDIR=/some/dir` puts it elsewhere.
 
 It preloads `libsteamscale.so` into Steam. The library acts only in Steam's own interface process and removes
 itself from the environment of games.
 
 | Variable | Meaning |
 |----------|---------|
-| `STEAM_SCALE_STEAM` | Steam launcher to run, when it is not `steam` |
+| `STEAM_SCALE_STEAM` | Steam launcher to run. Default: the next `steam` on `PATH` |
 | `STEAM_SCALE_MONITORS` | `X,Y,W,H=SCALE;...` in X11 pixels. Replaces detection |
 | `STEAM_SCALE_LOG` | File to append a log to |

@@ -1,6 +1,8 @@
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
+# Where the `steam` link goes; it has to come before the real steam on PATH. Empty installs no link.
+SHADOWDIR ?= $(BINDIR)
 PKG_CONFIG ?= pkg-config
 WAYLAND_SCANNER ?= $(shell $(PKG_CONFIG) --variable=wayland_scanner wayland-scanner)
 WAYLAND_PROTOCOLS ?= $(shell $(PKG_CONFIG) --variable=pkgdatadir wayland-protocols)
@@ -31,8 +33,10 @@ install: all
 	install -d $(DESTDIR)$(BINDIR)
 	sed 's|@LIBDIR@|$(LIBDIR)|' src/steam-scale.in > $(DESTDIR)$(BINDIR)/steam-scale
 	chmod 755 $(DESTDIR)$(BINDIR)/steam-scale
+	if [ -n "$(SHADOWDIR)" ]; then install -d $(DESTDIR)$(SHADOWDIR) && ln -sf $(BINDIR)/steam-scale $(DESTDIR)$(SHADOWDIR)/steam; fi
 
 uninstall:
+	if [ "$$(readlink $(DESTDIR)$(SHADOWDIR)/steam)" = $(BINDIR)/steam-scale ]; then rm -f $(DESTDIR)$(SHADOWDIR)/steam; fi
 	rm -f $(DESTDIR)$(LIBDIR)/steam-scale/libsteamscale.so $(DESTDIR)$(BINDIR)/steam-scale
 	-rmdir $(DESTDIR)$(LIBDIR)/steam-scale
 

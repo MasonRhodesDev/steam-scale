@@ -5,7 +5,7 @@
 # committed checksum only authenticates the tagged release archive.
 
 pkgname=steam-scale
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="Per-monitor fractional scaling for the Steam client under XWayland"
 arch=(x86_64)
@@ -24,7 +24,7 @@ build() {
 
 package() {
     cd "$srcdir/$pkgname-$pkgver"
-    make install PREFIX=/usr DESTDIR="$pkgdir"
+    make install PREFIX=/usr SHADOWDIR=/usr/local/bin DESTDIR="$pkgdir"
     install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

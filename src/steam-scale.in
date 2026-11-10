@@ -1,5 +1,26 @@
 #!/bin/sh
 # steam-scale [STEAM ARGS]: start Steam with per-monitor scaling.
-# STEAM_SCALE_STEAM names the Steam launcher to run when it is not `steam`.
+# Installed a second time as `steam`, ahead of the real one on PATH, so that starting Steam by name goes through here.
+# STEAM_SCALE_STEAM names the Steam launcher to run; without it, the first `steam` on PATH that is not this script.
 lib=@LIBDIR@/steam-scale/libsteamscale.so
-exec env LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}$lib" "${STEAM_SCALE_STEAM:-steam}" "$@"
+steam=${STEAM_SCALE_STEAM:-}
+if [ -z "$steam" ]; then
+    IFS=:
+    for dir in $PATH; do
+        if [ -x "$dir/steam" ] && ! [ "$dir/steam" -ef "$0" ]; then
+            steam=$dir/steam
+            break
+        fi
+    done
+    unset IFS
+fi
+if [ -z "$steam" ]; then
+    echo "steam-scale: no steam on PATH" >&2
+    exit 127
+fi
+case ":$LD_PRELOAD:" in
+*":$lib:"*) ;;
+*) LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}$lib" ;;
+esac
+export LD_PRELOAD
+exec "$steam" "$@"
