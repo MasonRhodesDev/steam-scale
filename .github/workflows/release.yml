@@ -1,0 +1,17 @@
+name: Release
+
+# rpm: false skips COPR. ARCH_REPO_TOKEN republishes [mason] on tag.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: MasonRhodesDev/packaging-workflows/.github/workflows/release.yml@v1
+    secrets: inherit
+    with:
+      rpm: false

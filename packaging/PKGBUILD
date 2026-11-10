@@ -1,0 +1,30 @@
+# Maintainer: Mason Rhodes <mrhodesdev@gmail.com>
+#
+# Version source of truth: pkgver below. CI drops a git-archive snapshot named
+# $pkgname-$pkgver.tar.gz next to this file and runs updpkgsums, so the
+# committed checksum only authenticates the tagged release archive.
+
+pkgname=steam-scale
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Per-monitor fractional scaling for the Steam client under XWayland"
+arch=(x86_64)
+url="https://github.com/MasonRhodesDev/steam-scale"
+license=(MIT)
+depends=(glibc libxcb wayland)
+makedepends=(wayland-protocols)
+optdepends=('steam: the client this launches')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('0000000000000000000000000000000000000000000000000000000000000000')
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    make
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+    make install PREFIX=/usr DESTDIR="$pkgdir"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

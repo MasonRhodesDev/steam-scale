@@ -1,1 +1,5 @@
 build/
+packaging/*.tar.gz
+packaging/*.pkg.tar.*
+packaging/src/
+packaging/pkg/
