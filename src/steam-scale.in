@@ -1,0 +1,5 @@
+#!/bin/sh
+# steam-scale [STEAM ARGS]: start Steam with per-monitor scaling.
+# STEAM_SCALE_STEAM names the Steam launcher to run when it is not `steam`.
+lib=@LIBDIR@/steam-scale/libsteamscale.so
+exec env LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}$lib" "${STEAM_SCALE_STEAM:-steam}" "$@"
