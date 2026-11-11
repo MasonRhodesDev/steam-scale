@@ -1,0 +1,38 @@
+name: deb and rpm
+
+# Builds the .deb and the .rpm on Debian 12, the oldest distribution they should install on.
+# With a release tag as input, attaches them to that GitHub Release.
+
+on:
+  workflow_call:
+    inputs:
+      release-tag:
+        description: Tag of the GitHub Release to attach the packages to. Empty builds only.
+        type: string
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:bookworm@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8
+    steps:
+      - name: Install build tooling
+        run: >-
+          apt-get update && apt-get install -y gcc make pkg-config libwayland-dev wayland-protocols
+          libxcb1-dev libxcb-randr0-dev curl ca-certificates git gh
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Build packages
+        env:
+          TAG: ${{ inputs.release-tag }}
+        run: |
+          version=${TAG#v}
+          sh packaging/build-packages.sh "${version:-0.0.0}"
+      - name: Attach to the release
+        if: inputs.release-tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release-tag }}
+        run: |
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$TAG" -R "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          gh release upload "$TAG" -R "$GITHUB_REPOSITORY" build/packages/* --clobber

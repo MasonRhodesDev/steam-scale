@@ -1,0 +1,25 @@
+# deb and rpm packages, built by packaging/build-packages.sh from a `make install` staged in build/stage.
+name: steam-scale
+arch: amd64
+version: ${VERSION}
+maintainer: Mason Rhodes <mrhodesdev@gmail.com>
+description: Per-monitor fractional scaling for the Steam client under XWayland
+homepage: https://github.com/MasonRhodesDev/steam-scale
+license: MIT
+contents:
+  - src: build/stage/usr/bin/steam-scale
+    dst: /usr/bin/steam-scale
+  - src: build/stage/usr/lib/steam-scale/libsteamscale.so
+    dst: /usr/lib/steam-scale/libsteamscale.so
+  - src: /usr/bin/steam-scale
+    dst: /usr/local/bin/steam
+    type: symlink
+  - src: README.md
+    dst: /usr/share/doc/steam-scale/README.md
+  - src: LICENSE
+    dst: /usr/share/doc/steam-scale/LICENSE
+overrides:
+  deb:
+    depends: [libc6, libxcb1, libxcb-randr0, libwayland-client0]
+  rpm:
+    depends: [glibc, libxcb, libwayland-client]

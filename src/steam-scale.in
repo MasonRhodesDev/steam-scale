@@ -1,7 +1,25 @@
 #!/bin/sh
 # steam-scale [STEAM ARGS]: start Steam with per-monitor scaling.
 # Installed a second time as `steam`, ahead of the real one on PATH, so that starting Steam by name goes through here.
+# steam-scale --install-desktop-entry: copy the system's Steam menu entry into the user's data directory with its
+# commands changed to run this script, because the system entry starts Steam by full path.
 # STEAM_SCALE_STEAM names the Steam launcher to run; without it, the first `steam` on PATH that is not this script.
+if [ "${1:-}" = --install-desktop-entry ]; then
+    self=$(readlink -f "$0")
+    dest=${XDG_DATA_HOME:-$HOME/.local/share}/applications
+    IFS=:
+    for dir in ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+        if [ -f "$dir/applications/steam.desktop" ]; then
+            mkdir -p "$dest"
+            sed "s|^Exec=[^ ]*|Exec=$self|" "$dir/applications/steam.desktop" > "$dest/steam.desktop"
+            echo "steam-scale: wrote $dest/steam.desktop"
+            exit 0
+        fi
+    done
+    echo "steam-scale: no applications/steam.desktop in XDG_DATA_DIRS" >&2
+    exit 1
+fi
+
 lib=@LIBDIR@/steam-scale/libsteamscale.so
 steam=${STEAM_SCALE_STEAM:-}
 if [ -z "$steam" ]; then

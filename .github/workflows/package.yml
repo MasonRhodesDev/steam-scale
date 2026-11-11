@@ -1,6 +1,6 @@
 name: Package
 
-# Arch only. The PKGBUILD's arch=() keeps this to x86_64, the only
+# Builds every package on each push and pull request. x86_64 only, the one
 # architecture Steam ships for.
 
 on:
@@ -15,3 +15,6 @@ concurrency:
 jobs:
   arch:
     uses: MasonRhodesDev/packaging-workflows/.github/workflows/arch-package.yml@v1
+
+  deb-rpm:
+    uses: ./.github/workflows/deb-rpm.yml

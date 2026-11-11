@@ -2,76 +2,50 @@
 
 Per-monitor fractional scaling for the Steam client on Wayland.
 
-Steam runs under XWayland and draws every window at one scale. On a monitor that the compositor scales, for
-example to 150%, Steam's text and buttons come out small. With steam-scale, each Steam window is drawn at the
-scale of the monitor it is on. The window changes scale when you move it to another monitor and when a
-monitor's scale changes. You configure nothing, because steam-scale reads the scales from the compositor.
+![Steam on a 150% monitor, without steam-scale and with it](docs/before-after.png)
 
-![The same Steam window on a 150% monitor, without steam-scale and with it](docs/before-after.png)
+The same Steam page on a 150% monitor. Left: stock Steam. Right: Steam with steam-scale.
 
-The same window on a 150% monitor. Left: stock Steam. Right: Steam started through steam-scale. Both halves
-are the same number of screen pixels.
+Steam runs under XWayland and draws every window at one scale, so on a scaled monitor its text is small.
+With steam-scale, each Steam window is drawn at the scale of the monitor it is on, and it follows the window
+from monitor to monitor. There is nothing to configure. Steam's files are not changed, and games are not
+affected.
 
-![One Steam session on a 100% monitor and on a 150% monitor](docs/two-monitors.png)
+## Install
 
-One Steam session with steam-scale. Left: the window on a 100% monitor. Right: the window after a move to a
-150% monitor.
+Download packages from the [latest release](https://github.com/MasonRhodesDev/steam-scale/releases/latest).
 
-## Requirements
+| Distribution | Command |
+|--------------|---------|
+| Arch | `sudo pacman -U steam-scale-*.pkg.tar.zst` |
+| Debian, Ubuntu | `sudo apt install ./steam-scale_*_amd64.deb` |
+| Fedora | `sudo dnf install ./steam-scale-*.x86_64.rpm` |
+| Any other | `make && sudo make install` (see [Development](docs/development.md)) |
 
-- A Wayland compositor that supports the `xdg-output` protocol, version 2 or later.
-- XWayland that runs unscaled, so that X11 applications see real pixels. On Hyprland, set
-  `xwayland { force_zero_scaling = true }`. On KDE Plasma, select "Apply scaling themselves". Where the
-  compositor scales XWayland, steam-scale changes nothing.
+Flatpak and Snap Steam are not supported.
 
-Development and testing happened on Hyprland. Other compositors are untested.
+## Use
 
-## Build and install
-
-To build, you need a C compiler, make, pkg-config, wayland-scanner, wayland-protocols, and the development
-files of libxcb (with RandR) and libwayland-client.
-
-    make
-    sudo make install            # into /usr/local
-
-To install without root:
-
-    make install PREFIX=$HOME/.local
-
-For Arch Linux, `packaging/PKGBUILD` builds a package.
-
-## Release
-
-Commit subjects on `main` decide the version, following [Conventional Commits](https://www.conventionalcommits.org).
-A push with a `feat`, `fix`, `perf` or `revert` commit since the last tag releases a patch version. A breaking
-commit (`type!:` or a `BREAKING CHANGE:` footer) releases a minor version. From 1.0.0 on, breaking is major,
-`feat` is minor and the rest are patch. Other types, such as `docs` and `ci`, release nothing.
-
-The `Tag` workflow creates the tag and starts the `Release` workflow, which builds the Arch package with the
-tag as its version and attaches it to a GitHub Release. No file holds the version.
-
-## Start Steam
-
-Start Steam the way you already do:
+Start Steam from a terminal as before:
 
     steam
 
-The install puts a `steam` link to `steam-scale` in the install directory. When that directory comes before
-the real `steam` on `PATH`, as `/usr/local/bin` and `~/.local/bin` usually do, the name `steam` starts
-steam-scale. steam-scale then starts the next `steam` on `PATH` and passes its arguments on.
+For the application menu, run this once as your user:
 
-A launcher that starts Steam by its full path, such as a desktop entry with `Exec=/usr/bin/steam`, does not
-go through the link. Change that launcher to run `steam-scale`.
+    steam-scale --install-desktop-entry
 
-To install no link, run `make install SHADOWDIR=`. To put the link in another directory, run
-`make install SHADOWDIR=/some/dir`.
+It copies Steam's menu entry into your home directory and points it at steam-scale. To undo it, delete
+`~/.local/share/applications/steam.desktop`.
 
-Steam prints one `wrong ELF class` warning from `ld.so` at startup. Steam's first process is 32-bit and cannot
-load the 64-bit library. The warning is harmless, because the process that draws the windows is 64-bit.
+## Requirements
 
-Games are not affected. The library removes itself from the environment before Steam starts a game.
+- A Wayland compositor with the `xdg-output` protocol, version 2 or later.
+- XWayland that runs unscaled. On Hyprland, set `xwayland { force_zero_scaling = true }`. On KDE Plasma,
+  select "Apply scaling themselves".
 
-## Environment variables
+Tested on Hyprland. Other compositors are untested.
+
+## Options
 
 | Variable | Meaning |
 |----------|---------|
@@ -79,8 +53,9 @@ Games are not affected. The library removes itself from the environment before S
 | `STEAM_SCALE_MONITORS` | `X,Y,W,H=SCALE;...` in X11 pixels. Replaces detection |
 | `STEAM_SCALE_LOG` | File to append a log to. Unset: no log |
 
-## When it stops working
+## More
 
-A Steam update can change the parts of Steam that steam-scale depends on. Steam then still starts, but its
-windows return to one scale. [How steam-scale works](docs/internals.md) lists those parts, the symptom of each
-change, and how to find which one changed.
+- [How it works, and what to check when a Steam update breaks it](docs/internals.md)
+- [Building, packaging and releasing](docs/development.md)
+
+MIT licensed. Not affiliated with Valve.
