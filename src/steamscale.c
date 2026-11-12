@@ -64,6 +64,8 @@ static int active, fixed;
 static int log_fd = -1;
 static pthread_once_t init_once = PTHREAD_ONCE_INIT, start_once = PTHREAD_ONCE_INIT;
 static void *(*real_dlsym)(void *, const char *);
+static void *(*real_dlopen)(const char *, int);
+static int (*real_dlclose)(void *);
 
 static void *gtk;
 static int (*real_scale_factor)(void *);
@@ -131,6 +133,10 @@ static void init(void)
 {
     real_dlsym = dlvsym(RTLD_NEXT, "dlsym", "GLIBC_2.34");
     if (!real_dlsym) real_dlsym = dlvsym(RTLD_NEXT, "dlsym", "GLIBC_2.2.5");
+    real_dlopen = dlvsym(RTLD_NEXT, "dlopen", "GLIBC_2.34");
+    if (!real_dlopen) real_dlopen = dlvsym(RTLD_NEXT, "dlopen", "GLIBC_2.2.5");
+    real_dlclose = dlvsym(RTLD_NEXT, "dlclose", "GLIBC_2.34");
+    if (!real_dlclose) real_dlclose = dlvsym(RTLD_NEXT, "dlclose", "GLIBC_2.2.5");
     char exe[4096] = "";
     ssize_t n = readlink("/proc/self/exe", exe, sizeof exe - 1);
     if (n > 0) exe[n] = 0;
@@ -449,10 +455,10 @@ static void *next_from(void *caller, const char *name)
     if (!dladdr1(caller, &di, (void **)&lm, RTLD_DL_LINKMAP) || !lm) return NULL;
     for (lm = lm->l_next; lm; lm = lm->l_next) {
         if (!lm->l_name || !*lm->l_name) continue;
-        void *h = dlopen(lm->l_name, RTLD_NOLOAD | RTLD_LAZY);
+        void *h = real_dlopen(lm->l_name, RTLD_NOLOAD | RTLD_LAZY);
         if (!h) continue;
         void *sym = real_dlsym(h, name);
-        dlclose(h);
+        real_dlclose(h);
         if (sym) return sym;
     }
     return NULL;
