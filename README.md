@@ -2,9 +2,9 @@
 
 Per-monitor fractional scaling for the Steam client on Wayland.
 
-![Steam on a 150% monitor, without steam-scale and with it](docs/before-after.png)
+![A Steam window dragged from a 100% monitor to a 150% monitor and back, stock and with steam-scale](docs/demo.gif)
 
-The same Steam page on a 150% monitor. Left: stock Steam. Right: Steam with steam-scale.
+A Steam window dragged from a 100% monitor to a 150% monitor and back. Account details are blurred.
 
 Steam runs under XWayland and draws every window at one scale, so on a scaled monitor its text is small.
 With steam-scale, each Steam window is drawn at the scale of the monitor it is on, and it follows the window
