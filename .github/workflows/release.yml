@@ -1,9 +1,5 @@
 name: Release
 
-# rpm: false skips COPR; the .deb and .rpm come from deb-rpm.yml instead. ARCH_REPO_TOKEN republishes [mason] on tag.
-# tag.yml starts this on the tag it creates. A tag pushed by hand starts it too.
-# version-from-tag makes the tag the package version.
-
 on:
   push:
     tags: ['v*']

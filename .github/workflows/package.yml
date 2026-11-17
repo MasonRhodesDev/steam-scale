@@ -1,8 +1,5 @@
 name: Package
 
-# Builds every package on each push and pull request. x86_64 only, the one
-# architecture Steam ships for.
-
 on:
   push:
     branches: [main]

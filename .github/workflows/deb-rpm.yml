@@ -1,8 +1,5 @@
 name: deb and rpm
 
-# Builds the .deb and the .rpm on Debian 12, the oldest distribution they should install on.
-# With a release tag as input, attaches them to that GitHub Release.
-
 on:
   workflow_call:
     inputs:

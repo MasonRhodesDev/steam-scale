@@ -1,7 +1,6 @@
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
-# Where the `steam` link goes; it has to come before the real steam on PATH. Empty installs no link.
 SHADOWDIR ?= $(BINDIR)
 PKG_CONFIG ?= pkg-config
 WAYLAND_SCANNER ?= $(shell $(PKG_CONFIG) --variable=wayland_scanner wayland-scanner)
