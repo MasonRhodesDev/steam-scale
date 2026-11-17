@@ -1,7 +1,4 @@
 #!/bin/sh
-# build-packages.sh VERSION: build steam-scale and write a .deb and an .rpm of it into build/packages.
-# Needs the build requirements from docs/development.md, plus curl. Run it on the oldest distribution the packages
-# should install on, because the library needs at least the C library version it was built against.
 set -eu
 version=${1:?usage: build-packages.sh VERSION}
 nfpm_version=2.48.0

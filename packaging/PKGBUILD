@@ -1,8 +1,4 @@
 # Maintainer: Mason Rhodes <mrhodesdev@gmail.com>
-#
-# The release tag is the version: a release build sets pkgver from the tag,
-# so pkgver below is a placeholder. CI drops a git-archive snapshot named
-# $pkgname-$pkgver.tar.gz next to this file and runs updpkgsums.
 
 pkgname=steam-scale
 pkgver=0.0.0

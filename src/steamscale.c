@@ -1,34 +1,3 @@
-/*
- * Per-monitor fractional scaling for the Steam client under XWayland.
- *
- * Chromium on X11 takes each display's scale from GTK: for every GdkMonitor it reads
- * gdk_monitor_get_geometry and gdk_monitor_get_scale_factor, multiplies by the font scale
- * (gdk_screen_get_resolution / 96) and assigns the result to the XRandR display that overlaps
- * most (ui/gtk/gtk_ui.cc GetDisplayConfig, ui/base/x/x11_display_util.cc GetDisplayScale).
- * Under XWayland GDK reports scale 1 for every monitor. libcef resolves those functions with
- * dlsym on its GTK handle, so this library wraps dlsym and hands libcef replacements that
- * report each monitor's real scale.
- *
- * The real scale is the monitor's size in X11 pixels (XRandR) divided by its logical size on the
- * compositor (xdg-output), matched by output name. When XWayland is not running unscaled the two
- * are equal and this library changes nothing.
- *
- * GDK scales are integers, so a fractional scale s is reported as monitor scale K*s with a font
- * scale of 1/K. K is a power of two up to 64 because Chromium rounds the font scale to 1/64.
- *
- * Steam's windows hold a Chromium window two levels down (SDL window > CEF container > Chromium).
- * Chromium picks that window's display, and so its scale, from the window's position on the root,
- * but as a child window it only learns its position relative to its parent, so it stays on the
- * display at 0,0. A thread here watches this process's top-level windows and tells each Chromium
- * window where it is with a synthetic ConfigureNotify, which Chromium reads as root coordinates
- * (ui/ozone/platform/x11/x11_window.cc OnConfigureEvent).
- *
- * Loaded with LD_PRELOAD into Steam. It only acts in the steamwebhelper browser process, and takes
- * itself out of LD_PRELOAD where Steam launches games.
- *
- *   STEAM_SCALE_MONITORS  "X,Y,W,H=SCALE;..." in X11 pixels. Replaces detection.
- *   STEAM_SCALE_LOG       log file (appended). Unset: no log.
- */
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -55,7 +24,6 @@ enum { MAX_MONS = 16, MAX_TOPS = 128, SETTLE_MS = 200, DETECT_MS = 150 };
 typedef struct { int x, y, w, h; } rect_t;
 typedef struct { rect_t r; double scale; char name[32]; } mon_t;
 
-/* The monitor table. Read from Chromium's UI thread and SDL, written by the watcher thread. */
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static mon_t mons[MAX_MONS];
 static int n_mons, denom = 1, scaling;
@@ -86,16 +54,12 @@ static void logf_(const char *fmt, ...)
     if (write(log_fd, buf, n) < 0) {}
 }
 
-/* ---- which process this is */
-
 static const char *base_name(const char *path)
 {
     const char *slash = strrchr(path, '/');
     return slash ? slash + 1 : path;
 }
 
-/* Games must not inherit this library. The string is edited in place so the change holds whichever
- * copy of the environment the process passes on. */
 static void leave_preload(void)
 {
     char *v = getenv("LD_PRELOAD");
@@ -154,8 +118,6 @@ __attribute__((constructor)) static void on_load(void)
     pthread_once(&init_once, init);
 }
 
-/* ---- the monitor table */
-
 static long overlap(const rect_t *a, const rect_t *b)
 {
     long w = (a->x + a->w < b->x + b->w ? a->x + a->w : b->x + b->w) - (a->x > b->x ? a->x : b->x);
@@ -163,7 +125,6 @@ static long overlap(const rect_t *a, const rect_t *b)
     return w > 0 && h > 0 ? w * h : 0;
 }
 
-/* Index of the monitor a rectangle is mostly on, -1 if none. Call with the lock held. */
 static int monitor_at(const rect_t *r)
 {
     long best = 0;
@@ -197,7 +158,6 @@ static int parse_monitors(const char *s, mon_t *out)
     return n;
 }
 
-/* Returns 1 if the table changed. */
 static int set_monitors(const mon_t *next, int n)
 {
     int d = 1, any = 0;
@@ -228,8 +188,6 @@ static int set_monitors(const mon_t *next, int n)
     }
     return changed;
 }
-
-/* ---- detection: X11 rectangles from XRandR, logical sizes from xdg-output */
 
 typedef struct {
     uint32_t id;
@@ -351,7 +309,6 @@ static void randr_open(void)
     randr_event = ext->first_event;
 }
 
-/* Returns 1 if the table changed. */
 static int detect(void)
 {
     mon_t next[MAX_MONS];
@@ -370,7 +327,6 @@ static int detect(void)
         for (int i = 0; i < MAX_MONS; i++)
             if (wouts[i].out && wouts[i].w > 0 && !strcmp(wouts[i].name, m->name)) wo = &wouts[i];
         if (wo) {
-            /* compositors set fractional scales in steps of 1/120 */
             double s = round((double)m->r.w / wo->w * 120) / 120;
             if (s >= 0.5 && s <= 8) m->scale = s;
         } else {
@@ -382,9 +338,6 @@ static int detect(void)
     return set_monitors(next, n);
 }
 
-/* ---- what libcef gets from GTK */
-
-/* The monitor's rectangle in X11 pixels and the integer scale to report for it; 0 to leave GDK's answer alone. */
 static int monitor_scale(void *monitor, rect_t *px)
 {
     rect_t g = {0, 0, 0, 0};
@@ -428,7 +381,6 @@ static double shim_resolution(void *screen)
     return res ? res : real_resolution(screen);
 }
 
-/* Chromium reads the monitors again when GDK says one changed (ui/gtk/gtk_ui.cc TrackMonitor). */
 static int gtk_reread(void *data)
 {
     (void)data;
@@ -447,7 +399,6 @@ static void gtk_poke(void)
     if (idle_add) idle_add(gtk_reread, NULL);
 }
 
-/* dlsym(RTLD_NEXT) depends on who calls it; from here it would search after this library. */
 static void *next_from(void *caller, const char *name)
 {
     Dl_info di;
@@ -486,7 +437,6 @@ void *dlsym(void *handle, const char *name)
     return sym;
 }
 
-/* The webhelper asks SDL for a display's content scale, which under XWayland is one global value. */
 float SDL_GetDisplayContentScale(unsigned display)
 {
     static float (*real)(unsigned);
@@ -506,25 +456,14 @@ float SDL_GetDisplayContentScale(unsigned display)
     return scale;
 }
 
-/* ---- X11 watcher. Two jobs, both done from a thread with its own connection:
- *
- * 1. Keep each Chromium window informed of its root position (see the top of this file).
- * 2. Keep each window's size right for its monitor. A window keeps its size in pixels unless someone
- *    resizes it. When the compositor moves a window to a monitor with another scale it resizes it; when
- *    a window is mapped on a monitor other than the one Steam sized it for, nobody does. So remember each
- *    window's size in scale-independent units and, once a monitor change has settled, resize the window
- *    if it does not have that size at the new scale.
- *
- * The same thread keeps the monitor table current. */
-
 typedef struct {
     xcb_window_t win;
-    int mine;       /* -1 until _NET_WM_PID can be read */
-    int managed;    /* not override-redirect */
-    rect_t r;       /* on the root, pixels */
-    int mon;        /* index into mons, -1 unknown */
-    double w, h;    /* size divided by the monitor's scale */
-    long long due;  /* when to check the size after a monitor change, 0 = not waiting */
+    int mine;
+    int managed;
+    rect_t r;
+    int mon;
+    double w, h;
+    long long due;
 } top_t;
 
 static xcb_atom_t net_wm_pid;
@@ -566,7 +505,6 @@ static int x_is_mine(top_t *t)
     return t->mine > 0;
 }
 
-/* Select on the top-level and its containers, then send every Chromium window its root rectangle. */
 static void x_sync(xcb_window_t top)
 {
     xcb_window_t boxes[16], inner[16];
@@ -606,7 +544,6 @@ static top_t *top_find(xcb_window_t w, int add)
     return spare;
 }
 
-/* A top-level window's rectangle as the server reported it, in event order. */
 static void top_seen(xcb_window_t w, rect_t r, int override_redirect)
 {
     top_t *t = top_find(w, 1);
@@ -640,7 +577,6 @@ static void top_settle(top_t *t)
     xcb_configure_window(xc, t->win, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, want);
 }
 
-/* The monitors changed under the windows, which keep their size in pixels: check each against its new scale. */
 static void tops_rebase(void)
 {
     long long due = now_ms() + SETTLE_MS;
@@ -711,7 +647,6 @@ static void *watch_main(void *arg)
             wl_dirty = 0;
             detect_due = now_ms() + DETECT_MS;
         }
-        /* take everything that is queued, then update once */
         for (; e; e = xcb_poll_for_event(xc)) {
             int type = e->response_type & 0x7f;
             if (randr_event >= 0 && (type == randr_event + XCB_RANDR_SCREEN_CHANGE_NOTIFY
@@ -749,7 +684,6 @@ static void *watch_main(void *arg)
     }
 }
 
-/* Runs once, on the first question about a monitor, so the first answer is already right. */
 static void start(void)
 {
     mon_t given[MAX_MONS];

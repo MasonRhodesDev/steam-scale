@@ -1,8 +1,5 @@
 name: Tag
 
-# A push to main with a feat, fix, perf, revert or breaking commit since the last tag releases it.
-# The shared workflow picks the next version from those commits, tags it, and starts Release on the tag.
-
 on:
   push:
     branches: [main]

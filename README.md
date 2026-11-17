@@ -20,7 +20,7 @@ Download packages from the [latest release](https://github.com/MasonRhodesDev/st
 | Arch | `sudo pacman -U steam-scale-*.pkg.tar.zst` |
 | Debian, Ubuntu | `sudo apt install ./steam-scale_*_amd64.deb` |
 | Fedora | `sudo dnf install ./steam-scale-*.x86_64.rpm` |
-| Any other | `make && sudo make install` (see [Development](docs/development.md)) |
+| Any other | `make && sudo make install` |
 
 Flatpak and Snap Steam are not supported.
 
@@ -52,10 +52,5 @@ Tested on Hyprland. Other compositors are untested.
 | `STEAM_SCALE_STEAM` | Steam launcher to run. Default: the next `steam` on `PATH` |
 | `STEAM_SCALE_MONITORS` | `X,Y,W,H=SCALE;...` in X11 pixels. Replaces detection |
 | `STEAM_SCALE_LOG` | File to append a log to. Unset: no log |
-
-## More
-
-- [How it works, and what to check when a Steam update breaks it](docs/internals.md)
-- [Building, packaging and releasing](docs/development.md)
 
 MIT licensed. Not affiliated with Valve.
